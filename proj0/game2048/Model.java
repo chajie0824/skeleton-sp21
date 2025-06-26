@@ -5,7 +5,7 @@ import java.util.Observable;
 
 
 /** The state of a game of 2048.
- *  @author TODO: YOUR NAME HERE
+ *  @author Chajie Zhou
  */
 public class Model extends Observable {
     /** Current contents of the board. */
@@ -106,13 +106,65 @@ public class Model extends Observable {
      *    value, then the leading two tiles in the direction of motion merge,
      *    and the trailing tile does not.
      * */
+
     public boolean tilt(Side side) {
         boolean changed;
         changed = false;
 
+        //act as if Side side is north.
+        board.setViewingPerspective(side);
+
+        //将非0元素上移到顶部
+        for (int col = 0; col < board.size(); col++) {
+            for (int row = board.size() - 1; row >= 0; row--) {
+                Tile t = board.tile(col, row);
+                int rowOfZero = row;
+                if (t != null) {
+                    while (rowOfZero + 1 < board.size() && board.tile(col, rowOfZero + 1) == null) {
+                        rowOfZero++;
+                    }
+                    board.move(col, rowOfZero, t);
+                    changed = true;
+                }
+            }
+        }
+
+        //将相同元素合并
+        for (int col = 0; col < board.size(); col++) {
+            for (int row = board.size() - 1; row >= 0; row--) {
+                Tile t = board.tile(col, row);
+                if (t != null) {
+                    if (row - 1 >= 0
+                        && board.tile(col, row - 1) != null
+                        && board.tile(col, row - 1).value() == t.value()) {
+                        board.move(col, row, board.tile(col, row - 1));
+                        score += 2 * t.value();
+                        changed = true;
+                    }
+                }
+            }
+        }
+
+        for (int col = 0; col < board.size(); col++) {
+            for (int row = board.size() - 1; row >= 0; row--) {
+                Tile t = board.tile(col, row);
+                int rowOfZero = row;
+                if (t != null) {
+                    while (rowOfZero + 1 < board.size() && board.tile(col, rowOfZero + 1) == null) {
+                        rowOfZero++;
+                    }
+                    board.move(col, rowOfZero, t);
+                    changed = true;
+                }
+            }
+        }
+
         // TODO: Modify this.board (and perhaps this.score) to account
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
+
+//Reset game original perspective NORTH.
+        board.setViewingPerspective(Side.NORTH);
 
         checkGameOver();
         if (changed) {
@@ -138,6 +190,13 @@ public class Model extends Observable {
      * */
     public static boolean emptySpaceExists(Board b) {
         // TODO: Fill in this function.
+        for (int row = 0; row < b.size(); row++) {
+            for (int col = 0; col < b.size(); col++) {
+                if (b.tile(row, col) == null) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -148,6 +207,15 @@ public class Model extends Observable {
      */
     public static boolean maxTileExists(Board b) {
         // TODO: Fill in this function.
+        for (int row = 0; row < b.size(); row++) {
+            for (int col = 0; col < b.size(); col++) {
+                if (b.tile(row, col) == null) {
+                    continue;
+                } else if (b.tile(row, col).value() == MAX_PIECE) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -159,6 +227,27 @@ public class Model extends Observable {
      */
     public static boolean atLeastOneMoveExists(Board b) {
         // TODO: Fill in this function.
+        for (int col = 0; col < b.size(); col++) {
+            for (int row = 0; row < b.size(); row++) {
+                if (b.tile(col, row) == null) {
+                    return true;
+                }
+            }
+        }
+        for (int col = 0; col < b.size() - 1; col++) {
+            for (int row = 0; row < b.size() - 1; row++) {
+                if (b.tile(col, row).value() == b.tile(col + 1, row).value()
+                        || b.tile(col, row).value() == b.tile(col, row + 1).value()) {
+                    return true;
+                }
+            }
+        }
+
+        if (b.tile(b.size() - 1, b.size() - 1).value() == b.tile(b.size() - 2, b.size() - 1).value()
+                || b.tile(b.size() - 1, b.size() - 1).value() == b.tile(b.size() - 1, b.size() - 2).value()) {
+            return true;
+        }
+
         return false;
     }
 
